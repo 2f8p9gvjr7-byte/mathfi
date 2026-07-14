@@ -1,0 +1,14 @@
+{
+  "name": "5 Formules Financières",
+  "short_name": "Formules",
+  "description": "Les 5 formules fondamentales de la finance temporelle : capital unique, annuité constante, perpétuité, annuité croissante, perpétuité croissante",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d1526",
+  "theme_color": "#0d1526",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

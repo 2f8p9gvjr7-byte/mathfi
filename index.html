@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>5 Formules Financières</title>
+<meta name="theme-color" content="#0d1526"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon-192.png"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<style>
+  :root{
+    --bg:#0d1526;
+    --bg2:#1a2035;
+    --card:#1e2d4a;
+    --accent:#f5a623;
+    --accent-dim:rgba(245,166,35,0.28);
+    --accent-faint:rgba(245,166,35,0.12);
+    --green:#2ecc71;
+    --lcd-bg:#15311f;
+    --text:#ffffff;
+    --text-dim:rgba(255,255,255,0.65);
+    --text-faint:rgba(255,255,255,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg);min-height:100vh;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:"SF Mono",ui-monospace,"IBM Plex Mono",Menlo,monospace;}
+
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:calc(16px + env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 16px max(20px, env(safe-area-inset-left));
+    border-bottom:1px solid var(--accent-faint);
+    background:var(--bg2);
+    position:sticky;top:0;z-index:5;
+  }
+  header h1{font-size:17px;margin:0;font-weight:600;}
+  header .sub{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-top:2px;}
+  #menuBtn{
+    background:transparent;border:1px solid var(--accent-dim);color:var(--text);
+    padding:8px 10px;border-radius:6px;font-size:16px;line-height:1;
+  }
+
+  #layout{display:flex;min-height:calc(100vh - 62px);}
+  nav{
+    width:270px;flex-shrink:0;background:var(--bg2);
+    border-right:1px solid var(--accent-faint);
+    overflow-y:auto;
+  }
+  nav button.navItem{
+    all:unset;cursor:pointer;display:flex;gap:10px;align-items:flex-start;
+    width:100%;padding:12px 18px;border-left:2px solid transparent;
+  }
+  nav button.navItem:active{background:var(--accent-faint);}
+  nav button.navItem.active{background:var(--accent-faint);border-left-color:var(--accent);}
+  nav .num{font-size:11px;color:var(--text-faint);margin-top:2px;min-width:18px;}
+  nav button.navItem.active .num{color:var(--accent);}
+  nav .navLabel{font-size:14px;color:var(--text-dim);}
+  nav button.navItem.active .navLabel{color:var(--text);font-weight:600;}
+
+  main{flex:1;padding:24px 20px 60px;max-width:640px;}
+  .moduleHead{display:flex;align-items:baseline;gap:8px;margin-bottom:2px;}
+  .moduleHead .num{color:var(--accent);font-size:12px;}
+  .moduleHead h2{font-size:20px;margin:0;font-weight:600;}
+  .subtitle{color:var(--text-dim);font-size:13px;margin:4px 0 20px;}
+
+  .lcdFrame{
+    background:linear-gradient(180deg,#2a2118,#1c160f);
+    border:1px solid var(--accent-dim);border-radius:10px;padding:14px;margin-bottom:20px;
+  }
+  .lcdScreen{
+    background:var(--lcd-bg);border-radius:6px;padding:18px 20px;
+    box-shadow:inset 0 2px 8px rgba(0,0,0,.3);position:relative;overflow:hidden;
+  }
+  .lcdScreen::before{
+    content:"";position:absolute;inset:0;opacity:.04;pointer-events:none;
+    background-image:repeating-linear-gradient(180deg,#fff 0px,#fff 1px,transparent 1px,transparent 3px);
+  }
+  .lcdTop{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:rgba(146,255,187,.7);}
+  .lcdLabel{margin-top:10px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(146,255,187,.7);}
+  .lcdValue{margin-top:4px;font-size:30px;font-weight:600;color:var(--green);word-break:break-all;}
+  .lcdValue.negative{color:#e3a98f;}
+
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;}
+  @media(max-width:520px){.fields{grid-template-columns:1fr;}}
+  .field label{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);margin-bottom:6px;}
+  .field label .unit{color:var(--accent);}
+  .field .fieldHint{display:block;font-size:11px;color:var(--text-faint);margin-top:5px;font-style:italic;}
+  .field input, .field select{
+    width:100%;padding:10px 12px;border-radius:5px;border:1px solid var(--accent-dim);
+    background:var(--bg);color:var(--text);font-size:14px;
+  }
+  .field input:focus, .field select:focus{outline:none;border-color:var(--accent);}
+
+  .field.sliderField{grid-column:1 / -1;}
+  .sliderHead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .sliderHead .sliderLabel{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-dim);}
+  .sliderHead .sliderValue{font-size:20px;font-weight:700;color:var(--accent);}
+  input[type="range"]{
+    width:100%;height:6px;border-radius:4px;-webkit-appearance:none;appearance:none;
+    background:linear-gradient(90deg, var(--accent) var(--fill, 50%), rgba(245,166,35,0.15) var(--fill, 50%));
+    outline:none;margin:6px 0;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;
+    background:var(--paper);border:3px solid var(--accent);cursor:pointer;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:22px;height:22px;border-radius:50%;background:var(--paper);border:3px solid var(--accent);cursor:pointer;
+  }
+
+  .sectionLabel{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 8px;}
+  .resultsTable{border:1px solid var(--accent-faint);border-radius:6px;overflow:hidden;margin-bottom:20px;}
+  .resultsTable .row{display:flex;justify-content:space-between;padding:10px 14px;font-size:14px;border-top:1px solid var(--accent-faint);}
+  .resultsTable .row:first-child{border-top:none;}
+  .resultsTable .row:nth-child(even){background:rgba(245,166,35,0.04);}
+  .resultsTable .rlabel{color:var(--text-dim);}
+  .resultsTable .rvalue{font-weight:600;}
+
+  .repItem{margin-bottom:10px;}
+  .repTop{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:4px;}
+  .repBar{height:6px;border-radius:4px;background:rgba(255,255,255,0.08);overflow:hidden;}
+  .repFill{height:100%;background:var(--accent);border-radius:4px;}
+
+  .footnote{font-size:11px;color:var(--text-faint);margin-top:24px;}
+  .explication{
+    margin-bottom:20px;padding:14px 16px;border-radius:6px;
+    background:var(--card);border-left:3px solid var(--accent);
+  }
+  .explication .explicationLabel{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;display:block;}
+  .explication p{font-size:13.5px;line-height:1.5;color:var(--text-dim);margin:0;}
+
+  #updateBanner{
+    display:none;position:fixed;left:0;right:0;bottom:0;z-index:20;
+    background:var(--card);border-top:1px solid var(--accent);
+    padding:12px max(16px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    align-items:center;justify-content:space-between;gap:12px;
+  }
+  #updateBanner span{font-size:13px;color:var(--text);}
+  #updateBanner button{
+    background:var(--accent);color:#1a1000;border:none;border-radius:6px;
+    padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;
+  }
+
+  #navOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9;}
+  @media(min-width:860px){
+    #menuBtn{display:none;}
+    #navOverlay{display:none !important;}
+    nav{position:static;}
+  }
+  @media(max-width:859px){
+    nav{position:fixed;top:0;bottom:0;left:0;z-index:10;transform:translateX(-100%);transition:transform .2s ease;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);}
+    nav.open{transform:translateX(0);}
+    #navOverlay.open{display:block;}
+    main{max-width:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>5 Formules Fondamentales</h1>
+    <div class="sub">Capital · Annuités · Perpétuités</div>
+  </div>
+  <button id="menuBtn" aria-label="Menu">☰</button>
+</header>
+
+<div id="layout">
+  <div id="navOverlay"></div>
+  <nav id="nav"></nav>
+  <main id="main"></main>
+</div>
+
+<div id="updateBanner">
+  <span>Nouvelle version disponible</span>
+  <button id="updateBtn">Mettre à jour</button>
+</div>
+
+<script>
+/* ---------------- formatting ---------------- */
+const fmtEUR = v => (isFinite(v)?v:0).toLocaleString('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+const fmtEURc = v => (isFinite(v)?v:0).toLocaleString('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:2});
+const fmtPct = v => ((isFinite(v)?v*100:0).toLocaleString('fr-FR',{maximumFractionDigits:2}))+' %';
+const fmtNum = v => (isFinite(v)?v:0).toLocaleString('fr-FR',{maximumFractionDigits:1});
+
+/* ---------------- modules ---------------- */
+const MODULES = [
+{id:'capitalunique',num:'01',title:'Capital unique',
+ subtitle:'FV = PV × (1+r)ⁿ  —  PV = FV / (1+r)ⁿ',
+ fields:[
+   {key:'va',label:'Valeur actuelle (capital initial)',unit:'€',def:10000},
+   {key:'vfVisee',label:'Valeur future visée (objectif, optionnel)',unit:'€',def:20000},
+   {key:'taux',label:'Taux annuel',unit:'%',def:6,min:0,max:15,step:0.1},
+   {key:'duree',label:'Durée',unit:'ans',def:10,min:1,max:50,step:1},
+ ],
+ explication:"Un euro aujourd'hui vaut plus qu'un euro dans dix ans, car il peut être placé et rapporter des intérêts. Chaque période, le capital grossit de r % — et ces intérêts génèrent eux-mêmes des intérêts l'année suivante (intérêts composés), d'où la puissance ⁿ. La formule inverse (diviser par (1+r)ⁿ) répond à la question symétrique : combien faut-il placer aujourd'hui pour obtenir un montant donné plus tard ?",
+ compute:v=>{
+   const r=v.taux/100, n=v.duree;
+   const facteur = Math.pow(1+r,n);
+   const vfObtenue = v.va*facteur;
+   const vaNecessaire = v.vfVisee/facteur;
+   return {primary:{label:'Valeur future obtenue',value:fmtEUR(vfObtenue)},
+     secondary:[
+       {label:'Facteur de capitalisation (1+r)ⁿ',value:fmtNum(facteur)},
+       {label:'Valeur actuelle nécessaire pour atteindre la valeur future visée',value:fmtEUR(vaNecessaire)},
+       {label:'Taux',value:fmtPct(r)},
+       {label:'Durée',value:fmtNum(n)+' ans'},
+     ]};
+ }},
+{id:'annuiteconstante',num:'02',title:'Annuité constante',
+ subtitle:'FV = P × [(1+r)ⁿ−1]/r  —  PV = P × [1−(1+r)⁻ⁿ]/r',
+ fields:[
+   {key:'p',label:'Versement par période',unit:'€',def:1000},
+   {key:'taux',label:'Taux par période',unit:'%',def:6,min:0,max:15,step:0.1},
+   {key:'n',label:'Nombre de périodes',unit:'périodes',def:10,min:1,max:50,step:1},
+ ],
+ explication:"Une annuité est une suite de versements identiques et réguliers. Pour la valeur future, on capitalise chaque versement jusqu'à la date finale puis on additionne le tout ; pour la valeur actuelle, on fait l'inverse : on actualise (on ramène à aujourd'hui) chaque versement futur. La formule évite de faire ce calcul terme par terme — c'est simplement la somme d'une suite géométrique, mise sous une forme compacte.",
+ compute:v=>{
+   const r=v.taux/100, n=v.n, P=v.p;
+   const fv = Math.abs(r)<1e-9 ? P*n : P*((Math.pow(1+r,n)-1)/r);
+   const pv = Math.abs(r)<1e-9 ? P*n : P*((1-Math.pow(1+r,-n))/r);
+   const totalVerse = P*n;
+   return {primary:{label:'Valeur future (FV)',value:fmtEUR(fv)},
+     secondary:[
+       {label:'Valeur actuelle (PV)',value:fmtEUR(pv)},
+       {label:'Total versé (sans intérêts)',value:fmtEUR(totalVerse)},
+       {label:'Intérêts / plus-value générés',value:fmtEUR(fv-totalVerse)},
+       {label:'Taux par période',value:fmtPct(r)},
+     ]};
+ }},
+{id:'perpetuite',num:'03',title:'Perpétuité constante',
+ subtitle:'PV = P / r  —  des versements identiques, à l\u2019infini',
+ fields:[
+   {key:'p',label:'Versement par période',unit:'€',def:1000},
+   {key:'taux',label:'Taux par période',unit:'%',def:6,min:0,max:15,step:0.1},
+ ],
+ explication:"Une perpétuité est une annuité qui ne s'arrête jamais. Pourtant sa valeur actuelle reste finie : plus un versement est lointain, plus son actualisation le rend négligeable — les termes de la somme tendent vers zéro. La formule P/r est simplement la limite de la formule de l'annuité constante quand le nombre de périodes tend vers l'infini.",
+ compute:v=>{
+   const r=v.taux/100, P=v.p;
+   const pv = r>0 ? P/r : NaN;
+   return {primary:{label:'Valeur actuelle (PV)',value: r>0? fmtEUR(pv) : '— (taux doit être > 0)',negative:!(r>0)},
+     secondary:[
+       {label:'Versement par période',value:fmtEUR(P)},
+       {label:'Taux par période',value:fmtPct(r)},
+       {label:'Condition de validité',value: r>0? 'Vérifiée (r > 0)' : 'Non vérifiée : le taux doit être strictement positif'},
+     ]};
+ }},
+{id:'annuitecroissante',num:'04',title:'Annuité croissante',
+ subtitle:'FV = P × [(1+g)ⁿ−(1+r)ⁿ]/(g−r)  —  formule "américaine" (Growing Annuity)',
+ fields:[
+   {key:'p',label:'Versement initial',unit:'€',def:10000},
+   {key:'croissance',label:'Croissance du versement (g)',unit:'%',def:5,min:0,max:10,step:0.1},
+   {key:'taux',label:'Taux (r)',unit:'%',def:10,min:0,max:15,step:0.1},
+   {key:'n',label:'Nombre de périodes',unit:'périodes',def:30,min:1,max:50,step:1},
+ ],
+ explication:"Comme l'annuité constante, mais chaque versement augmente de g % par rapport au précédent (une indexation, une hausse de salaire, une revalorisation de loyer...). Tant que le taux r et la croissance g sont différents, la somme des flux actualisés se calcule encore avec une formule fermée. On additionne toujours la contribution de chaque flux à la date finale, mais chacun grossit désormais à son propre rythme avant d'être capitalisé.",
+ compute:v=>{
+   const P=v.p, g=v.croissance/100, r=v.taux/100, n=v.n;
+   let fv, pv;
+   if(Math.abs(r-g)<1e-9){
+     pv = P*n/(1+r);
+     fv = pv*Math.pow(1+r,n);
+   } else {
+     fv = P*(Math.pow(1+g,n)-Math.pow(1+r,n))/(g-r);
+     pv = fv/Math.pow(1+r,n);
+   }
+   const totalVerse = Math.abs(g)<1e-9? P*n : P*((Math.pow(1+g,n)-1)/g);
+   const dernierVersement = P*Math.pow(1+g,Math.max(n-1,0));
+   return {primary:{label:'Valeur future (FV)',value:fmtEUR(fv)},
+     secondary:[
+       {label:'Valeur actuelle (PV)',value:fmtEUR(pv)},
+       {label:'Total versé cumulé',value:fmtEUR(totalVerse)},
+       {label:'Dernier versement (période '+fmtNum(n)+')',value:fmtEUR(dernierVersement)},
+       {label:'Plus-value',value:fmtEUR(fv-totalVerse)},
+     ]};
+ }},
+{id:'perpetuitecroissante',num:'05',title:'Perpétuité croissante',
+ subtitle:'PV = P / (r−g)  —  formule de Gordon-Shapiro, valable si r > g',
+ fields:[
+   {key:'p',label:'Versement initial (période 1)',unit:'€',def:1000},
+   {key:'croissance',label:'Croissance annuelle (g)',unit:'%',def:2,min:0,max:10,step:0.1},
+   {key:'taux',label:'Taux (r)',unit:'%',def:6,min:0,max:15,step:0.1},
+ ],
+ explication:"C'est une perpétuité dont les versements augmentent indéfiniment de g % par an — typiquement un dividende qui croît avec les bénéfices d'une entreprise. Elle n'a de sens que si r > g : sinon, les flux futurs grossissent plus vite qu'ils ne s'actualisent, et leur somme diverge vers l'infini. C'est la formule dite de Gordon-Shapiro, très utilisée pour estimer la valeur d'une action à partir des dividendes attendus.",
+ compute:v=>{
+   const P=v.p, g=v.croissance/100, r=v.taux/100;
+   const valide = r>g;
+   const pv = valide? P/(r-g) : NaN;
+   return {primary:{label:'Valeur actuelle (PV)',value: valide? fmtEUR(pv) : '— (r doit être > g)',negative:!valide},
+     secondary:[
+       {label:'Versement période 1',value:fmtEUR(P)},
+       {label:'Versement période 2',value:fmtEUR(P*(1+g))},
+       {label:'Taux (r)',value:fmtPct(r)},
+       {label:'Croissance (g)',value:fmtPct(g)},
+       {label:'Condition de validité',value: valide? 'Vérifiée (r > g)' : 'Non vérifiée : r doit être strictement supérieur à g'},
+     ]};
+ }},
+];
+
+/* ---------------- storage ---------------- */
+const STORAGE_KEY = 'formulesFinance.values.v1';
+function loadValues(){
+  let stored={};
+  try{ stored = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ stored={}; }
+  const values={};
+  MODULES.forEach(m=>{
+    values[m.id]={};
+    m.fields.forEach(f=>{
+      const saved = stored[m.id] ? stored[m.id][f.key] : undefined;
+      values[m.id][f.key] = saved!==undefined ? saved : f.def;
+    });
+  });
+  return values;
+}
+function saveValues(values){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(values)); }catch(e){}
+}
+let values = loadValues();
+let activeId = localStorage.getItem('formulesFinance.activeModule') || MODULES[0].id;
+if(!MODULES.find(m=>m.id===activeId)) activeId = MODULES[0].id;
+
+/* ---------------- render ---------------- */
+const navEl = document.getElementById('nav');
+const mainEl = document.getElementById('main');
+const navOverlay = document.getElementById('navOverlay');
+
+function renderNav(){
+  navEl.innerHTML = MODULES.map(m=>`
+    <button class="navItem ${m.id===activeId?'active':''}" data-id="${m.id}">
+      <span class="num mono">${m.num}</span>
+      <span class="navLabel">${m.title}</span>
+    </button>`).join('');
+  navEl.querySelectorAll('.navItem').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      activeId = btn.dataset.id;
+      localStorage.setItem('formulesFinance.activeModule', activeId);
+      closeNav();
+      renderNav();
+      renderMain();
+    });
+  });
+}
+
+function fieldHTML(m,f){
+  const val = values[m.id][f.key];
+  if(f.type==='select'){
+    return `<div class="field">
+      <label>${f.label}</label>
+      <select data-key="${f.key}">
+        ${f.options.map(o=>`<option value="${o.value}" ${o.value===val?'selected':''}>${o.label}</option>`).join('')}
+      </select>
+      ${f.hint?`<span class="fieldHint">${f.hint}</span>`:''}
+    </div>`;
+  }
+  if(f.min!==undefined && f.max!==undefined){
+    const pct = ((val-f.min)/(f.max-f.min))*100;
+    return `<div class="field sliderField">
+      <div class="sliderHead">
+        <span class="sliderLabel">${f.label}</span>
+        <span class="sliderValue mono" data-slider-display="${f.key}">${fmtNum(val)}${f.unit?' '+f.unit:''}</span>
+      </div>
+      <input type="range" data-key="${f.key}" min="${f.min}" max="${f.max}" step="${f.step||1}" value="${val}" style="--fill:${pct}%"/>
+      ${f.hint?`<span class="fieldHint">${f.hint}</span>`:''}
+    </div>`;
+  }
+  return `<div class="field">
+    <label>${f.label} ${f.unit?`<span class="unit">· ${f.unit}</span>`:''}</label>
+    <input type="number" data-key="${f.key}" value="${val}"/>
+    ${f.hint?`<span class="fieldHint">${f.hint}</span>`:''}
+  </div>`;
+}
+
+function renderMain(){
+  const m = MODULES.find(mm=>mm.id===activeId);
+  const result = m.compute(values[m.id]);
+  mainEl.innerHTML = `
+    <div class="moduleHead"><span class="num mono">${m.num}</span><h2>${m.title}</h2></div>
+    <p class="subtitle">${m.subtitle}</p>
+
+    <div class="lcdFrame">
+      <div class="lcdScreen">
+        <div class="lcdTop"><span>Formule ${m.num}</span><span>VA · VF</span></div>
+        <div class="lcdLabel">${result.primary.label}</div>
+        <div class="lcdValue mono ${result.primary.negative?'negative':''}">${result.primary.value}</div>
+      </div>
+    </div>
+
+    <div class="fields">
+      ${m.fields.map(f=>fieldHTML(m,f)).join('')}
+    </div>
+
+    <div class="sectionLabel">Détail</div>
+    <div class="resultsTable">
+      ${result.secondary.map(r=>`<div class="row"><span class="rlabel">${r.label}</span><span class="rvalue mono">${r.value}</span></div>`).join('')}
+    </div>
+
+    ${result.repartition ? `
+      <div class="sectionLabel">Répartition par classe d'actifs</div>
+      <div style="margin-bottom:20px">
+        ${result.repartition.map(it=>`
+          <div class="repItem">
+            <div class="repTop"><span>${it.label}</span><span class="mono">${fmtPct(it.pct)}</span></div>
+            <div class="repBar"><div class="repFill" style="width:${Math.min(it.pct*100,100)}%"></div></div>
+          </div>`).join('')}
+      </div>` : ''}
+
+    ${m.explication ? `
+      <div class="explication">
+        <span class="explicationLabel">Pourquoi cette formule ?</span>
+        <p>${m.explication}</p>
+      </div>` : ''}
+
+    <p class="footnote">Outil de calcul pédagogique. Les 5 formules fondamentales de la finance temporelle — vos données restent sur cet appareil (stockage local).</p>
+  `;
+
+  mainEl.querySelectorAll('[data-key]').forEach(el=>{
+    el.addEventListener('input',()=>{
+      const key = el.dataset.key;
+      const raw = el.value;
+      values[m.id][key] = el.tagName==='SELECT' ? raw : (raw===''?0:Number(raw));
+      saveValues(values);
+      if(el.type==='range'){
+        const min=Number(el.min), max=Number(el.max);
+        el.style.setProperty('--fill', ((Number(raw)-min)/(max-min)*100)+'%');
+        const display = mainEl.querySelector(`[data-slider-display="${key}"]`);
+        if(display){
+          const f = m.fields.find(ff=>ff.key===key);
+          display.textContent = fmtNum(Number(raw)) + (f && f.unit ? ' '+f.unit : '');
+        }
+      }
+      // recompute + update display without full re-render (keeps focus)
+      const res = m.compute(values[m.id]);
+      const lcdLabel = mainEl.querySelector('.lcdLabel');
+      const lcdValue = mainEl.querySelector('.lcdValue');
+      lcdLabel.textContent = res.primary.label;
+      lcdValue.textContent = res.primary.value;
+      lcdValue.classList.toggle('negative', !!res.primary.negative);
+      const rows = mainEl.querySelectorAll('.resultsTable .row');
+      res.secondary.forEach((r,idx)=>{
+        if(rows[idx]){
+          rows[idx].querySelector('.rlabel').textContent = r.label;
+          rows[idx].querySelector('.rvalue').textContent = r.value;
+        }
+      });
+      if(res.repartition){
+        const items = mainEl.querySelectorAll('.repItem');
+        res.repartition.forEach((it,idx)=>{
+          if(items[idx]){
+            items[idx].querySelector('.repTop span').textContent = it.label;
+            items[idx].querySelector('.repTop .mono').textContent = fmtPct(it.pct);
+            items[idx].querySelector('.repFill').style.width = Math.min(it.pct*100,100)+'%';
+          }
+        });
+      }
+    });
+  });
+}
+
+/* ---------------- nav toggle (mobile) ---------------- */
+function openNav(){ navEl.classList.add('open'); navOverlay.classList.add('open'); }
+function closeNav(){ navEl.classList.remove('open'); navOverlay.classList.remove('open'); }
+document.getElementById('menuBtn').addEventListener('click', ()=>{
+  navEl.classList.contains('open') ? closeNav() : openNav();
+});
+navOverlay.addEventListener('click', closeNav);
+
+renderNav();
+renderMain();
+
+/* ---------------- service worker + update banner ---------------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').then(reg=>{
+      reg.addEventListener('updatefound', ()=>{
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', ()=>{
+          if(newWorker.state==='installed' && navigator.serviceWorker.controller){
+            document.getElementById('updateBanner').style.display='flex';
+          }
+        });
+      });
+    });
+  });
+  document.getElementById('updateBtn').addEventListener('click', ()=>{
+    navigator.serviceWorker.getRegistration().then(reg=>{
+      if(reg && reg.waiting){ reg.waiting.postMessage('SKIP_WAITING'); }
+      window.location.reload();
+    });
+  });
+  navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+    window.location.reload();
+  });
+}
+</script>
+</body>
+</html>
