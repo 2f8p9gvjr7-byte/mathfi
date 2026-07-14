@@ -199,7 +199,7 @@ const MODULES = [
    {key:'taux',label:'Taux annuel',unit:'%',def:6,min:0,max:15,step:0.1},
    {key:'duree',label:'Durée',unit:'ans',def:10,min:1,max:50,step:1},
  ],
- explication:"Un euro aujourd'hui vaut plus qu'un euro dans dix ans, car il peut être placé et rapporter des intérêts. Chaque période, le capital grossit de r % — et ces intérêts génèrent eux-mêmes des intérêts l'année suivante (intérêts composés), d'où la puissance ⁿ. La formule inverse (diviser par (1+r)ⁿ) répond à la question symétrique : combien faut-il placer aujourd'hui pour obtenir un montant donné plus tard ?",
+ explication:"Un euro aujourd'hui vaut plus qu'un euro dans dix ans, car il peut être placé et rapporter des intérêts. Chaque période, le capital grossit de r % — et ces intérêts génèrent eux-mêmes des intérêts l'année suivante (intérêts composés), d'où la puissance ⁿ. La formule inverse (diviser par (1+r)ⁿ) répond à la question symétrique : combien faut-il placer aujourd'hui pour obtenir un montant donné plus tard ?<br><br><b>Exemple concret :</b> tu places 10 000 € sur une assurance-vie à 6 % pendant 10 ans, sans y toucher. Dans 10 ans, elle vaudra 10 000 × 1,06¹⁰ ≈ 17 908 € — les 7 908 € de gain sont presque autant d'intérêts sur intérêts que d'intérêts sur le capital initial.",
  compute:v=>{
    const r=v.taux/100, n=v.duree;
    const facteur = Math.pow(1+r,n);
@@ -220,7 +220,7 @@ const MODULES = [
    {key:'taux',label:'Taux par période',unit:'%',def:6,min:0,max:15,step:0.1},
    {key:'n',label:'Nombre de périodes',unit:'périodes',def:10,min:1,max:50,step:1},
  ],
- explication:"Une annuité est une suite de versements identiques et réguliers. Pour la valeur future, on capitalise chaque versement jusqu'à la date finale puis on additionne le tout ; pour la valeur actuelle, on fait l'inverse : on actualise (on ramène à aujourd'hui) chaque versement futur. La formule évite de faire ce calcul terme par terme — c'est simplement la somme d'une suite géométrique, mise sous une forme compacte.",
+ explication:"Une annuité est une suite de versements identiques et réguliers. Pour la valeur future, on capitalise chaque versement jusqu'à la date finale puis on additionne le tout ; pour la valeur actuelle, on fait l'inverse : on actualise (on ramène à aujourd'hui) chaque versement futur. La formule évite de faire ce calcul terme par terme — c'est simplement la somme d'une suite géométrique, mise sous une forme compacte.<br><br><b>Exemple concret :</b> tu verses 1 000 €/an sur un plan d'épargne à 6 %, pendant 10 ans. À la fin, tu disposeras de 13 181 € (le module 2 le calcule), alors que tu n'auras versé que 10 000 € au total — la différence, ce sont les intérêts composés sur des versements successifs. À l'inverse, un prêteur qui te promet 1 000 €/an pendant 10 ans ne te doit aujourd'hui que 7 360 € : c'est la valeur actuelle de cette même série de versements.",
  compute:v=>{
    const r=v.taux/100, n=v.n, P=v.p;
    const fv = Math.abs(r)<1e-9 ? P*n : P*((Math.pow(1+r,n)-1)/r);
@@ -239,16 +239,21 @@ const MODULES = [
  fields:[
    {key:'p',label:'Versement par période',unit:'€',def:1000},
    {key:'taux',label:'Taux par période',unit:'%',def:6,min:0,max:15,step:0.1},
+   {key:'nComparaison',label:'Durée de comparaison (pour illustrer la méthode ci-dessous)',unit:'périodes',def:20,min:1,max:50,step:1},
  ],
- explication:"Une perpétuité est une annuité qui ne s'arrête jamais. Pourtant sa valeur actuelle reste finie : plus un versement est lointain, plus son actualisation le rend négligeable — les termes de la somme tendent vers zéro. La formule P/r est simplement la limite de la formule de l'annuité constante quand le nombre de périodes tend vers l'infini.",
+ explication:"Une perpétuité est une rente qui ne s'arrête jamais — imagine une fondation qui verserait 1 000 €/an à une école, indéfiniment, ou une action de préférence qui verse un dividende fixe pour toujours. Étonnamment, sa valeur actuelle reste finie : plus un versement est lointain, plus son actualisation le rend négligeable. Historiquement, c'est même l'origine de la rente : au Moyen Âge, l'Église interdisait le prêt à intérêt (l'usure), mais autorisait la vente d'un bien contre un revenu perpétuel — le capital était \u00ab aliéné \u00bb, pas \u00ab prêté \u00bb, et l'emprunteur restait maître de son remboursement. Un moyen légal de faire la même chose qu'un prêt à intérêt.<br><br><b>La méthode américaine évite aussi la suite géométrique pour les annuités finies.</b> Plutôt que de sommer terme à terme, on raisonne ainsi : j'achète une perpétuité aujourd'hui (valeur P/r) ; à la date n, je la revends (elle vaut encore P/r à ce moment-là, actualisée à aujourd'hui elle vaut (P/r)/(1+r)ⁿ). La différence entre les deux est exactement la valeur d'une rente limitée à n versements — c'est la formule du module 02, retrouvée sans aucune suite géométrique.",
  compute:v=>{
-   const r=v.taux/100, P=v.p;
+   const r=v.taux/100, P=v.p, n=v.nComparaison;
    const pv = r>0 ? P/r : NaN;
-   return {primary:{label:'Valeur actuelle (PV)',value: r>0? fmtEUR(pv) : '— (taux doit être > 0)',negative:!(r>0)},
+   const pvRestituee = r>0 ? pv/Math.pow(1+r,n) : NaN;
+   const pvAnnuiteFinie = r>0 ? pv-pvRestituee : NaN;
+   return {primary:{label:'Valeur actuelle (PV) de la perpétuité',value: r>0? fmtEUR(pv) : '— (taux doit être > 0)',negative:!(r>0)},
      secondary:[
        {label:'Versement par période',value:fmtEUR(P)},
        {label:'Taux par période',value:fmtPct(r)},
        {label:'Condition de validité',value: r>0? 'Vérifiée (r > 0)' : 'Non vérifiée : le taux doit être strictement positif'},
+       {label:`Valeur de la perpétuité "restituée" à la période ${fmtNum(n)}, actualisée`,value: r>0? fmtEUR(pvRestituee):'—'},
+       {label:`= Valeur d'une rente limitée à ${fmtNum(n)} périodes (méthode américaine)`,value: r>0? fmtEUR(pvAnnuiteFinie):'—'},
      ]};
  }},
 {id:'annuitecroissante',num:'04',title:'Annuité croissante',
@@ -259,7 +264,7 @@ const MODULES = [
    {key:'taux',label:'Taux (r)',unit:'%',def:10,min:0,max:15,step:0.1},
    {key:'n',label:'Nombre de périodes',unit:'périodes',def:30,min:1,max:50,step:1},
  ],
- explication:"Comme l'annuité constante, mais chaque versement augmente de g % par rapport au précédent (une indexation, une hausse de salaire, une revalorisation de loyer...). Tant que le taux r et la croissance g sont différents, la somme des flux actualisés se calcule encore avec une formule fermée. On additionne toujours la contribution de chaque flux à la date finale, mais chacun grossit désormais à son propre rythme avant d'être capitalisé.",
+ explication:"Comme l'annuité constante, mais chaque versement augmente de g % par rapport au précédent (une indexation, une hausse de salaire, une revalorisation de loyer...). Tant que le taux r et la croissance g sont différents, la somme des flux actualisés se calcule encore avec une formule fermée. On additionne toujours la contribution de chaque flux à la date finale, mais chacun grossit désormais à son propre rythme avant d'être capitalisé.<br><br><b>Exemple concret :</b> Stéphanie épargne 10 000 €/an pour sa retraite, mais augmente ce versement de 5 % chaque année (comme son salaire) pendant 30 ans, placés à 10 %. Elle disposera de 2,625 millions d'euros à la fin — près d'un million de plus que si elle avait versé 10 000 €/an sans jamais l'augmenter.",
  compute:v=>{
    const P=v.p, g=v.croissance/100, r=v.taux/100, n=v.n;
    let fv, pv;
@@ -287,7 +292,7 @@ const MODULES = [
    {key:'croissance',label:'Croissance annuelle (g)',unit:'%',def:2,min:0,max:10,step:0.1},
    {key:'taux',label:'Taux (r)',unit:'%',def:6,min:0,max:15,step:0.1},
  ],
- explication:"C'est une perpétuité dont les versements augmentent indéfiniment de g % par an — typiquement un dividende qui croît avec les bénéfices d'une entreprise. Elle n'a de sens que si r > g : sinon, les flux futurs grossissent plus vite qu'ils ne s'actualisent, et leur somme diverge vers l'infini. C'est la formule dite de Gordon-Shapiro, très utilisée pour estimer la valeur d'une action à partir des dividendes attendus.",
+ explication:"C'est une perpétuité dont les versements augmentent indéfiniment de g % par an — typiquement un dividende qui croît avec les bénéfices d'une entreprise. Elle n'a de sens que si r > g : sinon, les flux futurs grossissent plus vite qu'ils ne s'actualisent, et leur somme diverge vers l'infini. C'est la formule dite de Gordon-Shapiro, très utilisée pour estimer la valeur d'une action à partir des dividendes attendus.<br><br><b>Une limite à garder en tête :</b> le modèle suppose que g reste inférieur à r indéfiniment. Or aucune entreprise ne peut faire croître ses dividendes plus vite que l'économie tout entière pendant des décennies — sinon elle finirait, mathématiquement, par la dépasser. En pratique, on n'utilise cette formule que pour un g modeste (proche de la croissance économique de long terme, 1 à 3 % par an), jamais pour prolonger indéfiniment une forte croissance récente.<br><br><b>Exemple concret :</b> une action verse un dividende de 1 000 € qui croît de 2 %/an, avec un taux d'actualisation de 6 %. Sa valeur théorique est de 1 000 / (0,06 − 0,02) = 25 000 €.",
  compute:v=>{
    const P=v.p, g=v.croissance/100, r=v.taux/100;
    const valide = r>g;
@@ -299,6 +304,45 @@ const MODULES = [
        {label:'Taux (r)',value:fmtPct(r)},
        {label:'Croissance (g)',value:fmtPct(g)},
        {label:'Condition de validité',value: valide? 'Vérifiée (r > g)' : 'Non vérifiée : r doit être strictement supérieur à g'},
+     ]};
+ }},
+{id:'emprunt',num:'06',title:'Emprunt — périodicité au choix',
+ subtitle:"Le montant par période s'obtient en résolvant P dans la formule de l'annuité (module 02)",
+ fields:[
+   {key:'capital',label:'Capital emprunté',unit:'€',def:200000},
+   {key:'tauxAnnuel',label:'Taux annuel nominal',unit:'%',def:4,min:0,max:15,step:0.1},
+   {key:'periodicite',label:'Périodicité de remboursement',type:'select',def:'mensuelle',options:[
+     {value:'mensuelle',label:'Mensuelle (12/an)'},
+     {value:'trimestrielle',label:'Trimestrielle (4/an)'},
+     {value:'semestrielle',label:'Semestrielle (2/an)'},
+     {value:'annuelle',label:'Annuelle (1/an)'},
+   ]},
+   {key:'duree',label:'Durée totale',unit:'ans',def:20,min:1,max:40,step:1},
+   {key:'arretApres',label:'Arrêt anticipé après',unit:'ans',def:5,min:0,max:40,step:1,
+     hint:"Pour connaître le capital restant dû si tu t'arrêtes avant le terme."},
+ ],
+ explication:"Le montant à rembourser à chaque période est simplement le P de la formule d'annuité constante (module 02), mais résolu à l'envers : on connaît la valeur actuelle (le capital emprunté) et on cherche le versement qui l'équilibre exactement compte tenu du taux et du nombre de périodes. Le taux annuel est ici divisé par le nombre de périodes par an (convention \u00ab taux proportionnel \u00bb, la plus courante en France pour le crédit à la consommation et immobilier) — ce n'est pas rigoureusement le taux actuariel équivalent, mais c'est celui que les banques françaises affichent.<br><br>Le capital restant dû à une date donnée, lui, se calcule comme la valeur actuelle de tous les versements qu'il reste encore à payer : c'est exactement la même formule d'annuité, appliquée aux périodes restantes plutôt qu'à la totalité.<br><br><b>Exemple concret :</b> 200 000 € empruntés sur 20 ans à 4 %, remboursés mensuellement. La mensualité tourne autour de 1 212 €. Si tu revends le bien et rembourses le prêt par anticipation au bout de 5 ans, il te restera environ 164 000 € à rembourser d'un coup — la plus grande partie du capital, car les premières années d'un prêt remboursent surtout des intérêts.",
+ compute:v=>{
+   const kMap = {mensuelle:12, trimestrielle:4, semestrielle:2, annuelle:1};
+   const k = kMap[v.periodicite];
+   const nPeriodes = Math.round(v.duree*k);
+   const iPeriode = v.tauxAnnuel/100/k;
+   const paiement = iPeriode===0 ? v.capital/nPeriodes : v.capital*iPeriode/(1-Math.pow(1+iPeriode,-nPeriodes));
+   const coutTotal = paiement*nPeriodes;
+   const coutInterets = coutTotal-v.capital;
+   const arretAns = Math.min(Math.max(v.arretApres,0), v.duree);
+   const arretPeriodes = Math.round(arretAns*k);
+   const restant = iPeriode===0
+     ? Math.max(v.capital-paiement*arretPeriodes,0)
+     : Math.max(v.capital*Math.pow(1+iPeriode,arretPeriodes) - paiement*((Math.pow(1+iPeriode,arretPeriodes)-1)/iPeriode), 0);
+   const labelPeriode = {mensuelle:'mensuel',trimestrielle:'trimestriel',semestrielle:'semestriel',annuelle:'annuel'}[v.periodicite];
+   return {primary:{label:`Montant ${labelPeriode} à payer`,value:fmtEUR(paiement)},
+     secondary:[
+       {label:'Nombre de périodes total',value:fmtNum(nPeriodes)},
+       {label:'Taux par période',value:fmtPct(iPeriode)},
+       {label:'Coût total du crédit',value:fmtEUR(coutTotal)},
+       {label:'Coût total des intérêts',value:fmtEUR(coutInterets)},
+       {label:`Capital restant dû après ${fmtNum(arretAns)} ans`,value:fmtEUR(restant)},
      ]};
  }},
 ];
