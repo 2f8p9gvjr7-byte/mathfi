@@ -134,6 +134,7 @@
   }
   .explication .explicationLabel{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;display:block;}
   .explication p{font-size:13.5px;line-height:1.5;color:var(--text-dim);margin:0;}
+  .explication p + p{margin-top:10px;}
 
   #updateBanner{
     display:none;position:fixed;left:0;right:0;bottom:0;z-index:20;
@@ -241,20 +242,25 @@ const MODULES = [
    {key:'taux',label:'Taux par période',unit:'%',def:6,min:0,max:15,step:0.1},
    {key:'nComparaison',label:'Durée de comparaison (pour illustrer la méthode ci-dessous)',unit:'périodes',def:20,min:1,max:50,step:1},
  ],
- explication:"Une perpétuité est une rente qui ne s'arrête jamais — imagine une fondation qui verserait 1 000 €/an à une école, indéfiniment, ou une action de préférence qui verse un dividende fixe pour toujours. Étonnamment, sa valeur actuelle reste finie : plus un versement est lointain, plus son actualisation le rend négligeable. Historiquement, c'est même l'origine de la rente : au Moyen Âge, l'Église interdisait le prêt à intérêt (l'usure), mais autorisait la vente d'un bien contre un revenu perpétuel — le capital était \u00ab aliéné \u00bb, pas \u00ab prêté \u00bb, et l'emprunteur restait maître de son remboursement. Un moyen légal de faire la même chose qu'un prêt à intérêt.<br><br><b>La méthode américaine évite aussi la suite géométrique pour les annuités finies.</b> Plutôt que de sommer terme à terme, on raisonne ainsi : j'achète une perpétuité aujourd'hui (valeur P/r) ; à la date n, je la revends (elle vaut encore P/r à ce moment-là, actualisée à aujourd'hui elle vaut (P/r)/(1+r)ⁿ). La différence entre les deux est exactement la valeur d'une rente limitée à n versements — c'est la formule du module 02, retrouvée sans aucune suite géométrique.",
+ explication:"Une perpétuité est une rente qui ne s'arrête jamais — imagine une fondation qui verserait 1 000 €/an à une école, indéfiniment, ou une action de préférence qui verse un dividende fixe pour toujours. Étonnamment, sa valeur actuelle reste finie : plus un versement est lointain, plus son actualisation le rend négligeable. Historiquement, c'est même l'origine de la rente : au Moyen Âge, l'Église interdisait le prêt à intérêt (l'usure), mais autorisait la vente d'un bien contre un revenu perpétuel — le capital était \u00ab aliéné \u00bb, pas \u00ab prêté \u00bb, et l'emprunteur restait maître de son remboursement. Un moyen légal de faire la même chose qu'un prêt à intérêt.<br><br><b>La méthode américaine évite aussi la suite géométrique pour les annuités finies.</b> L'idée : la valeur d'une rente limitée à n versements, c'est la valeur d'une perpétuité MOINS la partie de cette perpétuité qu'on ne touche jamais (celle qui commence après la période n). Le détail ci-dessus, puis la démonstration chiffrée en bas de page, montrent ce calcul avec tes propres chiffres.",
  compute:v=>{
    const r=v.taux/100, P=v.p, n=v.nComparaison;
    const pv = r>0 ? P/r : NaN;
    const pvRestituee = r>0 ? pv/Math.pow(1+r,n) : NaN;
    const pvAnnuiteFinie = r>0 ? pv-pvRestituee : NaN;
+   const demonstration = r>0 ? `
+     <p><b>1.</b> Une perpétuité de ${fmtEUR(P)}/période à ${fmtPct(r)} vaut aujourd'hui : ${fmtEUR(P)} / ${fmtPct(r)} = <b>${fmtEUR(pv)}</b>. C'est ce que tu paierais pour recevoir ${fmtEUR(P)} à chaque période, pour toujours.</p>
+     <p><b>2.</b> Imagine que tu ne veuilles garder que les ${fmtNum(n)} premiers versements, et redonner tout ce qui vient après (la perpétuité restante à partir de la période ${fmtNum(n+1)}). Cette portion "redonnée" vaudra elle aussi ${fmtEUR(pv)} — mais seulement une fois arrivé à la période ${fmtNum(n)}, pas aujourd'hui. Ramenée à aujourd'hui (actualisée sur ${fmtNum(n)} périodes), elle ne vaut que : ${fmtEUR(pv)} / (1+${fmtPct(r)})^${fmtNum(n)} = <b>${fmtEUR(pvRestituee)}</b>.</p>
+     <p><b>3.</b> Ce qu'il te reste donc réellement — les ${fmtNum(n)} versements que tu gardes — vaut : ${fmtEUR(pv)} − ${fmtEUR(pvRestituee)} = <b>${fmtEUR(pvAnnuiteFinie)}</b>. C'est exactement la valeur d'une rente de ${fmtNum(n)} versements de ${fmtEUR(P)}, retrouvée sans sommer une seule suite géométrique — juste deux perpétuités qu'on soustrait.</p>` : '';
    return {primary:{label:'Valeur actuelle (PV) de la perpétuité',value: r>0? fmtEUR(pv) : '— (taux doit être > 0)',negative:!(r>0)},
      secondary:[
        {label:'Versement par période',value:fmtEUR(P)},
        {label:'Taux par période',value:fmtPct(r)},
        {label:'Condition de validité',value: r>0? 'Vérifiée (r > 0)' : 'Non vérifiée : le taux doit être strictement positif'},
-       {label:`Valeur de la perpétuité "restituée" à la période ${fmtNum(n)}, actualisée`,value: r>0? fmtEUR(pvRestituee):'—'},
-       {label:`= Valeur d'une rente limitée à ${fmtNum(n)} périodes (méthode américaine)`,value: r>0? fmtEUR(pvAnnuiteFinie):'—'},
-     ]};
+       {label:`Valeur, actualisée à aujourd'hui, de la partie "au-delà de ${fmtNum(n)} périodes"`,value: r>0? fmtEUR(pvRestituee):'—'},
+       {label:`Valeur des ${fmtNum(n)} premiers versements seulement (= une rente limitée)`,value: r>0? fmtEUR(pvAnnuiteFinie):'—'},
+     ],
+     demonstration};
  }},
 {id:'annuitecroissante',num:'04',title:'Annuité croissante',
  subtitle:'FV = P × [(1+g)ⁿ−(1+r)ⁿ]/(g−r)  —  formule "américaine" (Growing Annuity)',
@@ -454,6 +460,12 @@ function renderMain(){
           </div>`).join('')}
       </div>` : ''}
 
+    ${result.demonstration ? `
+      <div class="explication" id="demonstrationBox">
+        <span class="explicationLabel">Démonstration, avec tes chiffres</span>
+        ${result.demonstration}
+      </div>` : ''}
+
     ${m.explication ? `
       <div class="explication">
         <span class="explicationLabel">Pourquoi cette formule ?</span>
@@ -501,6 +513,10 @@ function renderMain(){
             items[idx].querySelector('.repFill').style.width = Math.min(it.pct*100,100)+'%';
           }
         });
+      }
+      const demoBox = mainEl.querySelector('#demonstrationBox');
+      if(demoBox && res.demonstration){
+        demoBox.innerHTML = `<span class="explicationLabel">Démonstration, avec tes chiffres</span>${res.demonstration}`;
       }
     });
   });
